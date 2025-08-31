@@ -5,69 +5,90 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: adjeuken  <adjeuken@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/29 10:56:33 by adjeuken          #+#    #+#             */
-/*   Updated: 2025/08/29 11:00:19 by adjeuken         ###   ########.fr       */
+/*   Created: 2025/08/30 16:07:23 by adjeuken          #+#    #+#             */
+/*   Updated: 2025/08/30 17:04:24 by adjeuken         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-/* check global death and (optionally) this philo's must_eat */
-static int	should_stop(t_philo *ph)
+void	take_forks_blocking(t_philo *p)
 {
-	int	stop;
+	t_rules	*rules;
+	int		a;
+	int		b;
 
-	pthread_mutex_lock(&ph->s->state);
-	stop = ph->s->dead;
-	if (!stop && ph->p->must_eat > 0 && ph->meals_eaten >= ph->p->must_eat)
-		stop = 1;
-	pthread_mutex_unlock(&ph->s->state);
-	return (stop);
+	rules = p->state->rules;
+	a = p->left;
+	b = p->right;
+	if (p->id % 2 == 0)
+	{
+		a = p->right;
+		b = p->left;
+	}
+	pthread_mutex_lock(&rules->forks[a]);
+	safe_log(p, "has taken a fork");
+	pthread_mutex_lock(&rules->forks[b]);
+	safe_log(p, "has taken a fork");
 }
 
-/* block until forks acquired or stop; then do the eating section */
-static void	do_eat(t_philo *ph)
+void	ph_single_case(t_philo *p)
 {
-	int	got;
+	t_rules	*rules;
+	int64_t	now;
+	int64_t	last;
+	int64_t	rem;
+	int		delay;
 
-	got = 0;
-	while (!should_stop(ph))
-	{
-		if (try_take_both(ph))
-		{
-			got = 1;
-			break ;
-		}
-		precise_msleep(ph->p->retry_backoff_ms);
-	}
-	if (!got || should_stop(ph))
-		return ;
-	pthread_mutex_lock(&ph->s->state);
-	ph->last_meal_ms = now_ms();
-	pthread_mutex_unlock(&ph->s->state);
-	log_state(ph, "is eating");
-	precise_msleep(ph->p->time_to_eat);
-	pthread_mutex_lock(&ph->s->state);
-	ph->meals_eaten++;
-	pthread_mutex_unlock(&ph->s->state);
-	put_both(ph);
+	rules = p->state->rules;
+	safe_log(p, "is thinking");
+	pthread_mutex_lock(&rules->forks[p->left]);
+	safe_log(p, "has taken a fork");
+	pthread_mutex_lock(&p->state->state_mx);
+	last = p->last_meal_ms;
+	pthread_mutex_unlock(&p->state->state_mx);
+	now = now_ms();
+	rem = rules->t_die - (now - last);
+	delay = 0;
+	if (rem > 2)
+		delay = (int)(rem - 2);
+	if (delay > 0 && !stop_snapshot(p->state))
+		precise_sleep_ms(&p->state->stop, &p->state->state_mx, delay);
+	wait_until_stop(p->state);
+	pthread_mutex_unlock(&rules->forks[p->left]);
 }
 
-void	*philo_main(void *arg)
+void	ph_desync(t_philo *p)
 {
-	t_philo	*ph;
+	t_rules	*rules;
+	int		d;
 
-	ph = (t_philo *)arg;
-	if (ph->id % 2 == 0)
-		precise_msleep(ph->p->time_to_eat / 2);
-	while (!should_stop(ph))
-	{
-		log_state(ph, "is thinking");
-		do_eat(ph);
-		if (should_stop(ph))
-			break ;
-		log_state(ph, "is sleeping");
-		precise_msleep(ph->p->time_to_sleep);
-	}
-	return (NULL);
+	rules = p->state->rules;
+	d = 0;
+	if (rules->n % 2 == 0 && p->id % 2 == 0)
+		d = 2;
+	if (rules->n % 2 == 1 && p->id % 2 == 0)
+		d = rules->t_eat / 2;
+	if (d > 0)
+		precise_sleep_ms(&p->state->stop, &p->state->state_mx, d);
+}
+
+int	ph_eat_block(t_philo *p)
+{
+	t_rules	*rules;
+	int		done;
+
+	rules = p->state->rules;
+	done = 0;
+	safe_log(p, "is eating");
+	pthread_mutex_lock(&p->state->state_mx);
+	p->last_meal_ms = now_ms();
+	pthread_mutex_unlock(&p->state->state_mx);
+	precise_sleep_ms(&p->state->stop, &p->state->state_mx, rules->t_eat);
+	pthread_mutex_unlock(&p->state->rules->forks[p->left]);
+	pthread_mutex_unlock(&p->state->rules->forks[p->right]);
+	p->meals++;
+	if (rules->t_meals > 0 && (int)p->meals >= rules->t_meals)
+		done = 1;
+	return (done);
 }

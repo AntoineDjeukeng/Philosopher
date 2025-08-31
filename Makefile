@@ -1,5 +1,13 @@
 # **************************************************************************** #
-#                                   CONFIG                                      #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: adjeuken  <adjeuken@student.42.fr>         +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2025/08/30 18:46:44 by adjeuken          #+#    #+#              #
+#    Updated: 2025/08/30 18:46:54 by adjeuken         ###   ########.fr        #
+#                                                                              #
 # **************************************************************************** #
 
 NAME        := philo
@@ -15,7 +23,9 @@ INCLUDE     := -Iinclude
 # Mandatory sources
 # ------------------------------------------------------------------------------
 SRC_DIR     := src
-SRC_FILES   := main.c parse.c time.c log.c sim.c philo.c forks.c watchdog.c cleanup.c ft_atoi_long.c
+SRC_FILES   := ft_calloc.c app.c  destroy.c  init.c  logger.c  main.c  monitor.c  parse.c  philo.c\
+				 run.c  time.c  logger_utils.c  philo_utils.c ft_strlcpy.c  ft_strcmp.c\
+				 
 SRCS        := $(addprefix $(SRC_DIR)/,$(SRC_FILES))
 
 OBJ_DIR     := obj
@@ -26,8 +36,7 @@ DEPS        := $(OBJS:.o=.d)
 # Bonus sources
 # ------------------------------------------------------------------------------
 SRCB_DIR    := src_bonus
-SRCB_FILES  := main_bonus.c parse_bonus.c time_bonus.c log_bonus.c sim_bonus.c \
-               philo_bonus.c forks_bonus.c cleanup_bonus.c
+SRCB_FILES  := 
 SRCB        := $(addprefix $(SRCB_DIR)/,$(SRCB_FILES))
 
 OBJB_DIR    := obj_bonus

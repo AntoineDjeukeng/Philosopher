@@ -1,22 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   destroy.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: adjeuken  <adjeuken@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/30 16:41:48 by adjeuken          #+#    #+#             */
-/*   Updated: 2025/08/30 16:41:49 by adjeuken         ###   ########.fr       */
+/*   Created: 2025/08/30 16:44:08 by adjeuken          #+#    #+#             */
+/*   Updated: 2025/08/30 16:45:38 by adjeuken         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-int	main(int ac, char **av)
+void	destroy_all(t_rules *rules, t_state *state, t_logger *lg)
 {
-	t_ctx	a;
+	int			i;
+	t_logmsg	*m;
 
-	if (app_init(ac, (char **)av, &a))
-		return (1);
-	return (app_run_and_close(&a));
+	i = 0;
+	while (i < rules->n)
+	{
+		pthread_mutex_destroy(&rules->forks[i]);
+		i++;
+	}
+	free(rules->forks);
+	pthread_mutex_destroy(&state->state_mx);
+	while (lg->head)
+	{
+		m = lg->head;
+		lg->head = m->next;
+		free(m);
+	}
+	pthread_mutex_destroy(&lg->mx);
 }
