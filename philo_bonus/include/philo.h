@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: adjeuken  <adjeuken@student.42.fr>         +#+  +:+       +#+        */
+/*   By: adjeuken <adjeuken@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/13 14:42:45 by adjeuken          #+#    #+#             */
-/*   Updated: 2025/09/29 12:48:09 by adjeuken         ###   ########.fr       */
+/*   Updated: 2025/09/29 19:42:22 by adjeuken         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,21 +14,19 @@
 
 #include <limits.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <semaphore.h>
-
-
 
 typedef struct s_fork
 {
-	int	left_fork;
-	int	right_fork;
-	sem_t	lock;
+	int				left_fork;
+	int				right_fork;
+	sem_t			*lock;
 }					t_fork;
 
 typedef struct s_params
@@ -41,8 +39,8 @@ typedef struct s_params
 	int				live;
 	int				must_eat;
 	long long		start_at;
-	pthread_mutex_t	state_mtx;
-	pthread_mutex_t	print_mtx;
+	sem_t			*state_sem;
+	sem_t			*print_sem;
 	t_fork			*forks;
 	struct s_logger	*logger_ptr;
 }					t_params;
@@ -66,7 +64,7 @@ typedef struct s_log_item
 
 typedef struct s_logger
 {
-	pthread_mutex_t	mtx;
+	sem_t			*sem;
 	t_log_item		*q;
 	int				cap;
 	int				head;
@@ -117,5 +115,11 @@ int					logger_start(t_logger *lg);
 void				logger_stop_and_join(t_logger *lg);
 void				logger_destroy(t_logger *lg);
 int					logger_enqueue(t_logger *lg, char *msg);
-
+void				sem_name_from_ptr(char *dst, char tag, uintptr_t key,
+						int index);
+void				close_params_sems(t_params *p);
+int					logger_take_one(t_logger *lg, t_log_item *it);
+int					open_param_sem(sem_t **dst, t_params *p, char tag);
 void				*ft_memcpy(void *dst, const void *src, size_t n);
+void				*logger_thread(void *arg);
+void				logger_drain_locked(t_logger *lg);

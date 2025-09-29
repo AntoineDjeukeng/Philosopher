@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   print.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: adjeuken  <adjeuken@student.42.fr>         +#+  +:+       +#+        */
+/*   By: adjeuken <adjeuken@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/13 14:39:14 by adjeuken          #+#    #+#             */
-/*   Updated: 2025/09/13 14:39:15 by adjeuken         ###   ########.fr       */
+/*   Updated: 2025/09/29 19:25:06 by adjeuken         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,48 +63,62 @@ static char	*build_log_line(long long rel_ms, long long id, const char *msg)
 
 void	print_msg(t_philo *p, const char *msg)
 {
-	long long	rel_ms;
 	int			stop;
 	char		*line;
+	long long	rel_ms;
 
-	pthread_mutex_lock(&p->par->state_mtx);
+	if (!p->par->state_sem || p->par->state_sem == SEM_FAILED)
+		return ;
+	sem_wait(p->par->state_sem);
 	stop = p->par->state;
-	pthread_mutex_unlock(&p->par->state_mtx);
+	sem_post(p->par->state_sem);
 	if (stop)
 		return ;
-    rel_ms = (now_us() - p->par->start_at) / 1000LL;
-    if (rel_ms < 0)
-        rel_ms = 0;
-    line = build_log_line(rel_ms, (long long)p->id, msg);
+	rel_ms = (now_us() - p->par->start_at) / 1000LL;
+	if (rel_ms < 0)
+		rel_ms = 0;
+	line = build_log_line(rel_ms, (long long)p->id, msg);
 	if (line)
 		logger_enqueue(p->par->logger_ptr, line);
+}
+
+static int	mark_death_and_stop_logger(t_philo *p)
+{
+	t_logger	*lg;
+
+	if (!p->par->state_sem || p->par->state_sem == SEM_FAILED)
+		return (0);
+	sem_wait(p->par->state_sem);
+	if (p->par->state != 0)
+	{
+		sem_post(p->par->state_sem);
+		return (0);
+	}
+	p->par->state = p->id;
+	sem_post(p->par->state_sem);
+	lg = p->par->logger_ptr;
+	if (lg && lg->sem && lg->sem != SEM_FAILED)
+	{
+		sem_wait(lg->sem);
+		lg->stop = 1;
+		sem_post(lg->sem);
+	}
+	return (1);
 }
 
 int	declare_death(t_philo *p, long long now)
 {
 	long long	rel_ms;
-	t_logger	*lg;
 
-	pthread_mutex_lock(&p->par->state_mtx);
-	if (p->par->state != 0)
-	{
-		pthread_mutex_unlock(&p->par->state_mtx);
+	if (!mark_death_and_stop_logger(p))
 		return (0);
-	}
-	p->par->state = p->id;
-	pthread_mutex_unlock(&p->par->state_mtx);
-    rel_ms = (now - p->par->start_at) / 1000LL;
-    if (rel_ms < 0)
-        rel_ms = 0;
-    if (p->par->logger_ptr)
-	{
-		lg = p->par->logger_ptr;
-		pthread_mutex_lock(&lg->mtx);
-		lg->stop = 1;
-		pthread_mutex_unlock(&lg->mtx);
-	}
-	pthread_mutex_lock(&p->par->print_mtx);
+	rel_ms = (now - p->par->start_at) / 1000LL;
+	if (rel_ms < 0)
+		rel_ms = 0;
+	if (!p->par->print_sem || p->par->print_sem == SEM_FAILED)
+		return (0);
+	sem_wait(p->par->print_sem);
 	util_put_ms_id_msg(rel_ms, (long long)p->id, "died\n");
-	pthread_mutex_unlock(&p->par->print_mtx);
+	sem_post(p->par->print_sem);
 	return (0);
 }

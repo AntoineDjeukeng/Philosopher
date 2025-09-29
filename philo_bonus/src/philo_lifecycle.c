@@ -6,7 +6,7 @@
 /*   By: adjeuken  <adjeuken@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/13 14:38:45 by adjeuken          #+#    #+#             */
-/*   Updated: 2025/09/13 14:38:46 by adjeuken         ###   ########.fr       */
+/*   Updated: 2025/09/29 23:32:00 by adjeuken         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,45 @@ int	philo_sleep_then_think(t_philo *p)
 	print_msg(p, "is thinking\n");
 	return (1);
 }
+
+// int	align_start(t_philo *p)
+// {
+// 	long long	base;
+// 	long long	off;
+// 	long long	max_off;
+// 	long long	deadline;
+// 	long long	now;
+// 	long long	rem;
+
+// 	base = p->par->start_at;
+// 	off = 0;
+// 	if ((p->id % 2) != 0)
+// 	{
+// 		if ((p->par->n % 2) == 0)
+// 			off = p->par->t_eat / 2;
+// 		else
+// 			off = p->par->t_eat / 3;
+// 	}
+// 	max_off = p->par->t_die - p->par->t_eat - 1000;
+// 	if (max_off < 0)
+// 		max_off = 0;
+// 	if (off > max_off)
+// 		off = max_off;
+// 	deadline = base + off;
+// 	while (1)
+// 	{
+// 		now = now_us();
+// 		if (now >= deadline)
+// 			break ;
+// 		rem = deadline - now;
+// 		if (rem > 500)
+// 			micro_sleep(500);
+// 		else
+// 			micro_sleep(rem);
+// 	}
+// 	p->last_meal = now_us();
+// 	return (1);
+// }
 
 int	align_start(t_philo *p)
 {

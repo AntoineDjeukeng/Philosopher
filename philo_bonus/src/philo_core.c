@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo_core.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: adjeuken  <adjeuken@student.42.fr>         +#+  +:+       +#+        */
+/*   By: adjeuken <adjeuken@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/13 14:37:37 by adjeuken          #+#    #+#             */
-/*   Updated: 2025/09/13 14:37:38 by adjeuken         ###   ########.fr       */
+/*   Updated: 2025/09/29 19:20:43 by adjeuken         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,11 @@ int	global_stop(t_params *par)
 {
 	int	stop;
 
-	pthread_mutex_lock(&par->state_mtx);
+	if (!par->state_sem || par->state_sem == SEM_FAILED)
+		return (1);
+	sem_wait(par->state_sem);
 	stop = (par->state != 0);
-	pthread_mutex_unlock(&par->state_mtx);
+	sem_post(par->state_sem);
 	return (stop);
 }
 
