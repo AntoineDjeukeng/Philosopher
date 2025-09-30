@@ -1,4 +1,4 @@
-````markdown
+
 # Dining Philosophers (pthread)
 
 This project implements the classic **Dining Philosophers problem** in C using
