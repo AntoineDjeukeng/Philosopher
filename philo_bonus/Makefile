@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: adjeuken  <adjeuken@student.42.fr>         +#+  +:+       +#+         #
+#    By: adjeuken <adjeuken@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/09/13 14:43:15 by adjeuken          #+#    #+#              #
-#    Updated: 2025/09/29 22:45:58 by adjeuken         ###   ########.fr        #
+#    Updated: 2025/09/30 09:59:26 by adjeuken         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -60,14 +60,14 @@ re: fclean all
 
 # ================= Diagnostics (Valgrind) =================
 # Pass program arguments via ARGS="..."
-VALGRIND ?= valgrind
+# VALGRIND ?= valgrind
 
-memcheck: $(NAME)
-	$(VALGRIND) --leak-check=full --show-leak-kinds=all \
-	  --errors-for-leak-kinds=all --track-origins=yes  ./$(NAME) $(ARGS)
+# memcheck: $(NAME)
+# 	$(VALGRIND) --leak-check=full --show-leak-kinds=all \
+# 	  --errors-for-leak-kinds=all --track-origins=yes  ./$(NAME) $(ARGS)
 
-helgrind: $(NAME)
-	$(VALGRIND) --tool=helgrind  ./$(NAME) $(ARGS)
+# helgrind: $(NAME)
+# 	$(VALGRIND) --tool=helgrind  ./$(NAME) $(ARGS)
 
-drd: $(NAME)
-	$(VALGRIND) --tool=drd  ./$(NAME) $(ARGS)
+# drd: $(NAME)
+# 	$(VALGRIND) --tool=drd  ./$(NAME) $(ARGS)
